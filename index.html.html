@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SISPEDA</title>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --accent3: #ff6b6b;
+    --text: #e8eaf6;
+    --text2: #9fa8da;
+    --text3: #5c6bc0;
+    --success: #66bb6a;
+    --warning: #ffa726;
+    --danger: #ef5350;
+    --info: #42a5f5;
+    --font: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Header */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: bold; color: #fff;
+  }
+  .header-title { font-size: 14px; font-weight: bold; }
+  .header-status {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text2);
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  
+  /* Main Layout */
+  .main-app {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 200px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-section {
+    padding: 6px 16px;
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active {
+    background: rgba(108, 99, 255, 0.1);
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  
+  /* Content Area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    position: relative;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  
+  /* Dashboard Grid Layout */
+  .dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* Cards & Components */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; }
+  .stat-value { font-size: 24px; font-weight: bold; margin-top: 4px; }
+  
+  /* Forms */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 11px; color: var(--text2); }
+  .form-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-info { background: var(--info); color: #000; }
+  .btn-danger { background: var(--danger); color: white; }
+  
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--bg3); color: var(--text); padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid rgba(46,51,80,0.4); color: var(--text2); }
+  tr:hover td { color: var(--text); }
+  
+  /* Terminal */
+  .terminal {
+    background: #0a0c10;
+    padding: 12px;
+    border-radius: 4px;
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 20px; right: 20px;
+    padding: 12px 24px; border-radius: 4px;
+    display: none; z-index: 100000; font-weight: bold;
+  }
+
+  /* HALAMAN LOGIN MULTI-STEP */
+  #loginPage {
+    position: fixed; 
+    inset: 0; 
+    background: linear-gradient(rgba(15, 17, 23, 0.5), rgba(15, 17, 23, 0.7)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop') no-repeat center center;
+    background-size: cover;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 99999;
+  }
+  .login-card {
+    background: rgba(26, 29, 39, 0.95); 
+    padding: 35px 30px; 
+    border-radius: 12px; 
+    width: 380px;
+    text-align: center; 
+    border: 1px solid var(--border);
+    color: var(--text);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+  }
+  .login-card h1 { color: #fff; font-size: 32px; font-weight: bold; margin-bottom: 20px; letter-spacing: 1px; }
+  .role-selector { display: flex; gap: 10px; margin-bottom: 16px; }
+  .role-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 12px; font-weight: 600; font-family: var(--font); transition: all 0.2s; }
+  .role-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .login-input { width: 100%; padding: 11px 14px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); border-radius: 6px; outline: none; font-size: 13px; font-family: var(--font); }
+  .login-input:focus { border-color: var(--accent); }
+  .login-submit { width: 100%; padding: 11px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 6px; font-family: var(--font); transition: opacity 0.2s; }
+  .login-submit:hover { opacity: 0.9; }
+  .login-alert { color: var(--danger); font-size: 11px; margin-top: 10px; display: none; text-align: left; padding: 8px; background: rgba(239,83,80,0.1); border: 1px solid var(--danger); border-radius: 6px; font-weight: 500; }
+  
+  .login-help-links {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .login-help-links a { color: var(--accent2); text-decoration: none; cursor: pointer; }
+  .login-help-links a:hover { text-decoration: underline; }
+
+  .auth-step { display: none; }
+  .auth-step.active { display: block; }
+
+  .execution-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: rgba(78, 205, 196, 0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(78, 205, 196, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="login-card">
+    <h1>SISPEDA</h1>
+    
+    <div id="step-login" class="auth-step active">
+      <div class="role-selector">
+        <button type="button" class="role-btn active" onclick="setRole('mahasiswa')">Mahasiswa</button>
+        <button type="button" class="role-btn" onclick="setRole('dosen')">Dosen</button>
+      </div>
+      
+      <input id="username" type="text" class="login-input" placeholder="Masukkan NIM Anda">
+      <input id="password" type="password" class="login-input" placeholder="Password (mahasiswa123)">
+      
+      <button type="button" class="login-submit" onclick="handleLoginSubmit()">Masuk Aplikasi</button>
+      
+      <div class="login-help-links">
+        <a onclick="showAuthStep('forgot')">Lupa Password?</a>
+        <a onclick="showAuthStep('otp-request')">Verifikasi OTP Email</a>
+      </div>
+    </div>
+
+    <div id="step-forgot" class="auth-step">
+      <p style="font-size:12px; margin-bottom:12px; color:var(--text2);">Masukkan Email terdaftar untuk menerima instruksi reset password.</p>
+      <input id="forgot-email" type="email" class="login-input" placeholder="Masukkan Email Anda">
+      <button type="button" class="login-submit" onclick="handleForgotPassword()">Kirim Teks Reset</button>
+      <div class="login-help-links" style="justify-content: center;">
+        <a onclick="showAuthStep('login')">Kembali ke Login</a>
+      </div>
+    </div>
+
+    <div id="step-otp-request" class="auth-step">
+      <p style="font-size:12px; margin-bottom:12px; color:var(--text2);">Kirim kode OTP keamanan ke email Anda sebelum masuk.</p>
+      <input id="otp-email" type="email" class="login-input" placeholder="Masukkan Email Anda">
+      <button type="button" class="login-submit" style="background:var(--info);" onclick="sendOTPCode()">Kirim Kode OTP</button>
+      <div class="login-help-links" style="justify-content: center;">
+        <a onclick="showAuthStep('login')">Kembali ke Login</a>
+      </div>
+    </div>
+
+    <div id="step-otp-verify" class="auth-step">
+      <p style="font-size:12px; margin-bottom:12px; color:var(--success);">Kode OTP telah diproses! Periksa kotak masuk email Anda.</p>
+      <input id="otp-input" type="text" class="login-input" placeholder="Masukkan 6 Digit OTP">
+      <button type="button" class="login-submit" style="background:var(--success);" onclick="verifyOTPCode()">Verifikasi & Masuk</button>
+      <div class="login-help-links" style="justify-content: center;">
+        <a onclick="showAuthStep('otp-request')">Kirim Ulang OTP</a>
+      </div>
+    </div>
+    
+    <div id="login-alert" class="login-alert"></div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-logo">S</div>
+  <div>
+    <div class="header-title">SISPEDA</div>
+  </div>
+  <div class="header-status">
+    <div class="status-dot"></div>
+    <span id="role-display">Role: Guest</span>
+  </div>
+</div>
+
+<div class="main-app">
+  <div class="sidebar">
+    <div class="sidebar-section">Menu</div>
+    <div class="nav-item active" onclick="switchNav('dashboard')">📊 Dashboard</div>
+    <div class="nav-item" onclick="switchNav('data')">📋 Data Mahasiswa</div>
+    <div class="nav-item" id="nav-tambah" onclick="switchNav('tambah')">➕ Tambah Data</div>
+    <div class="nav-item" onclick="switchNav('cari')">🔍 Pencarian</div>
+    <div class="nav-item" onclick="switchNav('urut')">⬆️ Pengurutan</div>
+    <div class="sidebar-section" style="margin-top:12px;">Tools</div>
+    <div class="nav-item" onclick="switchNav('file')">💾 File I/O & Email</div>
+    <div class="nav-item" onclick="switchNav('console')">⚡ Console Python</div>
+    <div class="nav-item" onclick="switchNav('info')">ℹ️ Info Kompleksitas</div>
+    <div class="nav-item" onclick="handleLogout()" style="color:var(--accent3); margin-top:auto;">🚪 Keluar</div>
+  </div>
+
+  <div class="content">
+    <div class="panel active" id="panel-dashboard">
+      <div class="dashboard-layout">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total Mahasiswa</div><div class="stat-value" id="stat-total">0</div></div>
+          <div class="stat-card"><div class="stat-label">Rata-rata IPK</div><div class="stat-value" id="stat-ipk">0.00</div></div>
+          <div class="stat-card"><div class="stat-label">IPK Tertinggi</div><div class="stat-value" id="stat-max">0.00</div></div>
+          <div class="stat-card"><div class="stat-label">IPK Terendah</div><div class="stat-value" id="stat-min">0.00</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 Preview Data Terakhir</div>
+          <table>
+            <thead><tr><th>NIM</th><th>Nama</th><th>Prodi</th><th>IPK</th><th>Status</th></tr></thead>
+            <tbody id="preview-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-data">
+      <div style="display:flex; gap:10px; margin-bottom:12px;">
+        <input type="text" class="form-input" id="tbl-search" placeholder="Cari cepat data mahasiswa..." oninput="filterTable()" style="flex:1">
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+          <thead><tr><th>NIM</th><th>Nama</th><th>Prodi</th><th>Angkatan</th><th>Sem</th><th>IPK</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-tambah">
+      <div class="card">
+        <div class="card-title">➕ Form Data Mahasiswa</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">NIM</label><input type="text" class="form-input" id="f-nim"></div>
+          <div class="form-group"><label class="form-label">Nama Lengkap</label><input type="text" class="form-input" id="f-nama"></div>
+          <div class="form-group">
+            <label class="form-label">Program Studi</label>
+            <select class="form-input" id="f-prodi">
+              <option>Teknik Informatika</option><option>Sistem Informasi</option><option>Teknik Elektro</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Angkatan</label><input type="text" class="form-input" id="f-angkatan"></div>
+          <div class="form-group"><label class="form-label">Semester</label><input type="number" class="form-input" id="f-semester" min="1" max="14"></div>
+          <div class="form-group"><label class="form-label">IPK</label><input type="text" class="form-input" id="f-ipk"></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveMahasiswa()">💾 Simpan Data</button></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-cari">
+      <div class="card">
+        <div class="card-title">🔍 Pencarian Multi-Algoritma</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Kata Kunci (NIM / Nama)</label><input type="text" class="form-input" id="s-keyword"></div>
+          <div class="form-group">
+            <label class="form-label">Algoritma</label>
+            <select class="form-input" id="s-algo">
+              <option value="linear">Linear Search — O(n)</option>
+              <option value="binary">Binary Search — O(log n) [Data Otomatis Diurutkan]</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="runSearch()">Cari</button></div>
+        <div id="search-time-container"></div>
+        <div id="search-result" style="margin-top:15px;"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-urut">
+      <div class="card">
+        <div class="card-title">⬆️ Pengurutan Data</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Algoritma</label>
+            <select class="form-input" id="sort-algo">
+              <option value="bubble">Bubble Sort — O(n²)</option>
+              <option value="merge">Merge Sort — O(n log n)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Berdasarkan</label>
+            <select class="form-input" id="sort-field">
+              <option value="ipk">IPK</option><option value="nama">Nama</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="runSort()">Urutkan</button></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-file">
+      <div class="card">
+        <div class="card-title">💾 Ekspor / Impor Data (JSON)</div>
+        <p style="color: var(--text2); margin-bottom: 12px;">Gunakan modul ini untuk menyimpan cadangan berkas atau memasukkan data baru secara massal.</p>
+        <div class="btn-row">
+          <button class="btn btn-success" onclick="exportJSON()">⬇ Ekspor JSON</button>
+          <div style="border-left: 1px solid var(--border); height: 30px; margin: 0 10px;"></div>
+          <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importJSON(event)">
+          <button class="btn btn-info" onclick="document.getElementById('import-file').click()">⬆ Pilih & Impor File JSON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📨 Kirim Rekap Data Mahasiswa ke Email</div>
+        <p style="color: var(--text2); margin-bottom: 12px;">Kirimkan seluruh rekapitulasi data mahasiswa aktif langsung ke alamat email Anda dalam format teks terstruktur.</p>
+        <div class="form-group" style="max-width: 400px; margin-bottom: 12px;">
+          <label class="form-label">Alamat Email Tujuan</label>
+          <input type="email" id="export-email-destination" class="form-input" placeholder="nama@email.com">
+        </div>
+        <button class="btn btn-primary" onclick="sendDataToEmail()">✉ Kirim Data Ke Email</button>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-console">
+      <div class="terminal" id="terminal-output">SISPEDA Python Terminal Simulator environment ready. 🌟<br>Ketik 'help' untuk melihat bantuan instruksi!</div>
+      <div class="terminal-input-row">
+        <span style="color:var(--accent)">python&gt;</span>
+        <input type="text" class="form-input" id="console-input" style="flex:1; background:transparent; border:none;" placeholder="Ketik perintah..." onkeydown="handleConsoleKey(event)">
+      </div>
+    </div>
+
+    <div class="panel" id="panel-info">
+      <div class="card">
+        <div class="card-title">⏱️ Kompleksitas Algoritma</div>
+        <table>
+          <thead><tr><th>Algoritma</th><th>Best</th><th>Average</th><th>Worst</th></tr></thead>
+          <tbody>
+            <tr><td>Linear Search</td><td>O(1)</td><td>O(n)</td><td>O(n)</td></tr>
+            <tr><td>Binary Search</td><td>O(1)</td><td>O(log n)</td><td>O(log n)</td></tr>
+            <tr><td>Bubble Sort</td><td>O(n)</td><td>O(n²)</td><td>O(n²)</td></tr>
+            <tr><td>Merge Sort</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ==========================================
+  // HUBUNGKAN KUNCI API EMAILJS ANDA DI SINI
+  // ==========================================
+  const EMAILJS_PUBLIC_KEY = "m-pty0gpJl5172Q7a";   
+  const EMAILJS_SERVICE_ID = "service_x83m53g";   
+  const EMAILJS_TEMPLATE_ID = "template_ky308n5"; 
+
+  // Inisialisasi library jika key telah diganti
+  if(EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY") {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  }
+
+  let currentLoginRole = 'mahasiswa';
+  let generatedOTP = '';
+  let targetOTPEmail = '';
+  
+  let mahasiswaData = [
+    {nim: "2201010001", nama: "Eka Saputra", prodi: "Teknik Informatika", angkatan: "2022", semester: 4, ipk: 3.75, status: "Aktif"},
+    {nim: "2201010002", nama: "Ririn Arianti", prodi: "Sistem Informasi", angkatan: "2022", semester: 4, ipk: 3.89, status: "Aktif"},
+    {nim: "2301010045", nama: "Biondi", prodi: "Teknik Informatika", angkatan: "2023", semester: 2, ipk: 3.65, status: "Aktif"},
+    {nim: "2201010003", nama: "Andi Wijaya", prodi: "Teknik Elektro", angkatan: "2022", semester: 4, ipk: 3.42, status: "Aktif"},
+    {nim: "2201010004", nama: "Citra Lestari", prodi: "Sistem Informasi", angkatan: "2022", semester: 4, ipk: 3.95, status: "Aktif"},
+    {nim: "2301010005", nama: "Dedi Kurniawan", prodi: "Teknik Informatika", angkatan: "2023", semester: 2, ipk: 3.20, status: "Aktif"},
+    {nim: "2301010006", nama: "Elsa Zahra", prodi: "Sistem Informasi", angkatan: "2023", semester: 2, ipk: 3.78, status: "Aktif"},
+    {nim: "2401010007", nama: "Fajar Nugraha", prodi: "Teknik Informatika", angkatan: "2024", semester: 2, ipk: 3.50, status: "Aktif"},
+    {nim: "2401010008", nama: "Gita Permata", prodi: "Teknik Elektro", angkatan: "2024", semester: 2, ipk: 3.61, status: "Aktif"},
+    {nim: "2101010009", nama: "Hendra Wijaya", prodi: "Teknik Informatika", angkatan: "2021", semester: 6, ipk: 3.15, status: "Aktif"},
+    {nim: "2201010010", nama: "Indah Putri", prodi: "Sistem Informasi", angkatan: "2022", semester: 4, ipk: 3.82, status: "Aktif"},
+    {nim: "2301010011", nama: "Kevin Sanjaya", prodi: "Teknik Elektro", angkatan: "2023", semester: 2, ipk: 3.35, status: "Aktif"},
+    {nim: "2401010012", nama: "Lita Amalia", prodi: "Teknik Informatika", angkatan: "2024", semester: 2, ipk: 3.90, status: "Aktif"}
+  ];
+
+  function showAuthStep(step) {
+    document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active'));
+    document.getElementById('login-alert').style.display = 'none';
+    
+    if (step === 'login') document.getElementById('step-login').classList.add('active');
+    else if (step === 'forgot') document.getElementById('step-forgot').classList.add('active');
+    else if (step === 'otp-request') document.getElementById('step-otp-request').classList.add('active');
+    else if (step === 'otp-verify') document.getElementById('step-otp-verify').classList.add('active');
+  }
+
+  // KIRIM OTP VIA EMAILJS
+  function sendOTPCode() {
+    const email = document.getElementById('otp-email').value.trim();
+    const alertBox = document.getElementById('login-alert');
+    
+    if(!email) {
+      alertBox.innerText = "Email tidak boleh kosong!";
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    targetOTPEmail = email;
+    alertBox.style.display = 'none';
+    showToast("Mengirim OTP...", "info");
+
+    if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
+      alert(`[MODE SIMULASI] OTP: ${generatedOTP}\nIsi API keys terlebih dahulu!`);
+      showAuthStep('otp-verify');
+    } else {
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: email,
+        subject: "Kode OTP Keamanan SISPEDA",
+        message: `Kode OTP keamanan Anda untuk masuk ke sistem SISPEDA adalah: ${generatedOTP}. Jaga kerahasiaan kode ini.`
+      }).then(() => {
+        showToast("OTP Berhasil dikirim ke Email!", "success");
+        showAuthStep('otp-verify');
+      }).catch(() => {
+        alertBox.innerText = "Gagal mengirim email, periksa konfigurasi API EmailJS Anda.";
+        alertBox.style.display = 'block';
+      });
+    }
+  }
+
+  function verifyOTPCode() {
+    const inputOTP = document.getElementById('otp-input').value.trim();
+    const alertBox = document.getElementById('login-alert');
+
+    if(inputOTP === generatedOTP && generatedOTP !== '') {
+      alertBox.style.display = 'none';
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('role-display').innerText = `Role: VERIFIED USER (${targetOTPEmail})`;
+      document.getElementById('nav-tambah').style.display = 'flex';
+      showToast("Verifikasi OTP Sukses!", "success");
+      renderDashboard();
+    } else {
+      alertBox.innerText = "Kode OTP Salah atau Kadaluwarsa!";
+      alertBox.style.display = 'block';
+    }
+  }
+
+  // LUPA PASSWORD VIA EMAILJS
+  function handleForgotPassword() {
+    const email = document.getElementById('forgot-email').value.trim();
+    const alertBox = document.getElementById('login-alert');
+
+    if(!email) {
+      alertBox.innerText = "Masukkan alamat email Anda!";
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    alertBox.style.display = 'none';
+    showToast("Memproses data...", "info");
+
+    if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
+      alert(`[SIMULASI] Link reset dikirim ke: ${email}`);
+      showAuthStep('login');
+    } else {
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: email,
+        subject: "Instruksi Akses Password SISPEDA",
+        message: "Anda menerima pesan ini karena meminta reset password. Silakan gunakan password default bawaan sistem untuk mencoba masuk: 'mahasiswa123' untuk Mahasiswa, atau 'dosen123' untuk akun Dosen."
+      }).then(() => {
+        showToast("Instruksi berhasil dikirim ke email!", "success");
+        showAuthStep('login');
+      }).catch(() => {
+        alertBox.innerText = "Gagal memproses pengiriman reset password.";
+        alertBox.style.display = 'block';
+      });
+    }
+  }
+
+  // KIRIM DATA REKAP MAHASISWA VIA EMAILJS
+  function sendDataToEmail() {
+    const emailTujuan = document.getElementById('export-email-destination').value.trim();
+    if(!emailTujuan) {
+      showToast("Tuliskan email tujuan pengiriman!", "warning");
+      return;
+    }
+
+    showToast("Sedang menyusun data & mengirim...", "info");
+
+    let dataString = "=== REKAP DATA MAHASISWA SISPEDA ===\n\n";
+    mahasiswaData.forEach((m, idx) => {
+      dataString += `${idx+1}. NIM: ${m.nim} | Nama: ${m.nama} | Prodi: ${m.prodi} | IPK: ${m.ipk} | Status: ${m.status}\n`;
+    });
+    dataString += `\nTotal Data: ${mahasiswaData.length} Mahasiswa aktif terdaftar.`;
+
+    if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
+      console.log(dataString);
+      alert("[SIMULASI] Rekap data tercetak di Console log!");
+    } else {
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: emailTujuan,
+        subject: "Ekspor Rekapitulasi Data Mahasiswa SISPEDA",
+        message: dataString
+      }).then(() => {
+        showToast("Data Mahasiswa sukses dikirim ke email Anda!", "success");
+      }).catch(() => {
+        showToast("Pengiriman gagal, periksa API Key Anda.", "danger");
+      });
+    }
+  }
+
+  function setRole(role) {
+    currentLoginRole = role;
+    document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('username').placeholder = role === 'mahasiswa' ? "Masukkan NIM Anda" : "Username (NIDN)";
+    document.getElementById('password').placeholder = role === 'mahasiswa' ? "Password (mahasiswa123)" : "Password";
+  }
+
+  function handleLoginSubmit() {
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value.trim();
+    const alertBox = document.getElementById('login-alert');
+    
+    if (!user || !pass) {
+      alertBox.innerText = "Username/NIM dan Password tidak boleh kosong!";
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    let isSuccess = false;
+    let loggedInName = user;
+
+    if (currentLoginRole === 'mahasiswa') {
+      const mhs = mahasiswaData.find(m => m.nim === user);
+      if (mhs && pass === 'mahasiswa123') {
+        isSuccess = true;
+        loggedInName = mhs.nama;
+      }
+    } else if (currentLoginRole === 'dosen') {
+      if (user === 'dosen' && pass === 'dosen123') {
+        isSuccess = true;
+        loggedInName = "Dosen Pengampu";
+      }
+    }
+
+    if (isSuccess) {
+      alertBox.style.display = 'none';
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('role-display').innerText = `Role: ${currentLoginRole.toUpperCase()} (${loggedInName})`;
+      
+      if (currentLoginRole === 'mahasiswa') {
+        document.getElementById('nav-tambah').style.display = 'none';
+        showToast(`Selamat Datang, ${loggedInName}!`, 'info');
+      } else {
+        document.getElementById('nav-tambah').style.display = 'flex';
+        showToast(`Selamat Datang, Pak/Bu ${loggedInName}!`, 'success');
+      }
+      renderDashboard();
+    } else {
+      if (currentLoginRole === 'mahasiswa') {
+        alertBox.innerText = "Gagal! NIM tidak terdaftar atau password salah (Gunakan password: mahasiswa123)";
+      } else {
+        alertBox.innerText = "Gagal! Akun dosen gunakan -> User: dosen | Pass: dosen123";
+      }
+      alertBox.style.display = 'block';
+    }
+  }
+
+  function handleLogout() {
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    showAuthStep('login');
+    showToast("Berhasil keluar sistem", "info");
+  }
+
+  function switchNav(panelId) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    
+    const targetPanel = document.getElementById(`panel-${panelId}`);
+    if (targetPanel) targetPanel.classList.add('active');
+    
+    const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(n => n.getAttribute('onclick').includes(panelId));
+    if(activeNav) activeNav.classList.add('active');
+    
+    if(panelId === 'dashboard') renderDashboard();
+    if(panelId === 'data') renderTable();
+  }
+
+  function renderDashboard() {
+    document.getElementById('stat-total').innerText = mahasiswaData.length;
+    if(mahasiswaData.length === 0) return;
+    
+    let sum = 0, max = 0, min = 4.0;
+    let previewHtml = "";
+    
+    mahasiswaData.forEach(m => {
+      let val = parseFloat(m.ipk);
+      sum += val;
+      if(val > max) max = val;
+      if(val < min) min = val;
+      
+      previewHtml += `<tr><td>${m.nim}</td><td><strong>${m.nama}</strong></td><td>${m.prodi}</td><td><span style="color:var(--accent2); font-weight:700;">${m.ipk}</span></td><td><span style="color:var(--success); font-weight:600;">${m.status}</span></td></tr>`;
+    });
+    
+    document.getElementById('stat-ipk').innerText = (sum / mahasiswaData.length).toFixed(2);
+    document.getElementById('stat-max').innerText = max.toFixed(2);
+    document.getElementById('stat-min').innerText = min.toFixed(2);
+    document.getElementById('preview-tbody').innerHTML = previewHtml;
+  }
+
+  function renderTable() {
+    let html = "";
+    mahasiswaData.forEach((m, idx) => {
+      html += `<tr>
+        <td>${m.nim}</td>
+        <td><strong>${m.nama}</strong></td>
+        <td>${m.prodi}</td>
+        <td>${m.angkatan}</td>
+        <td>${m.semester}</td>
+        <td><span style="color:var(--accent2); font-weight:700;">${m.ipk}</span></td>
+        <td><span style="color:var(--success); font-weight:600;">${m.status}</span></td>
+        <td>
+          <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="deleteData(${idx})">🗑️ Hapus</button>
+        </td>
+      </tr>`;
+    });
+    document.getElementById('tbl-body').innerHTML = html || "<tr><td colspan='8'>Tidak ada data mahasiswa.</td></tr>";
+  }
+
+  function saveMahasiswa() {
+    if (currentLoginRole === 'mahasiswa') {
+      showToast("Akses ditolak: Anda tidak memiliki hak", "danger");
+      return;
+    }
+    const nim = document.getElementById('f-nim').value.trim();
+    const nama = document.getElementById('f-nama').value.trim();
+    const prodi = document.getElementById('f-prodi').value;
+    const angkatan = document.getElementById('f-angkatan').value.trim();
+    const semester = document.getElementById('f-semester').value;
+    const ipk = document.getElementById('f-ipk').value.trim();
+
+    if(!nim || !nama || !ipk) { showToast("NIM, Nama, dan IPK wajib diisi!", "warning"); return; }
+    if(mahasiswaData.some(m => m.nim === nim)) { showToast("NIM sudah terdaftar!", "danger"); return; }
+
+    mahasiswaData.push({nim, nama, prodi, angkatan, semester, ipk, status: "Aktif"});
+    showToast(`Data ${nama} berhasil disimpan!`, 'success');
+    
+    document.getElementById('f-nim').value = '';
+    document.getElementById('f-nama').value = '';
+    document.getElementById('f-angkatan').value = '';
+    document.getElementById('f-semester').value = '';
+    document.getElementById('f-ipk').value = '';
+    
+    switchNav('dashboard');
+  }
+
+  function deleteData(index) {
+    if (currentLoginRole === 'mahasiswa') { showToast("Akses ditolak!", "danger"); return; }
+    mahasiswaData.splice(index, 1);
+    renderTable();
+    showToast("Data telah dihapus", "info");
+  }
+
+  function filterTable() {
+    const q = document.getElementById('tbl-search').value.toLowerCase();
+    const rows = document.querySelectorAll('#tbl-body tr');
+    rows.forEach(r => { r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none'; });
+  }
+
+  function runSearch() {
+    const kw = document.getElementById('s-keyword').value.trim().toLowerCase();
+    const algo = document.getElementById('s-algo').value;
+    const resultDiv = document.getElementById('search-result');
+    const timeContainer = document.getElementById('search-time-container');
+    
+    if(!kw) { resultDiv.innerHTML = "Ketik kata kunci!"; timeContainer.innerHTML = ""; return; }
+    let found = [];
+    let startTime, endTime;
+
+    if (algo === 'linear') {
+      startTime = performance.now();
+      for (let i = 0; i < mahasiswaData.length; i++) {
+        if (mahasiswaData[i].nama.toLowerCase().includes(kw) || mahasiswaData[i].nim.includes(kw)) {
+          found.push(mahasiswaData[i]);
+        }
+      }
+      endTime = performance.now();
+    } else if (algo === 'binary') {
+      mahasiswaData.sort((a, b) => a.nim.localeCompare(b.nim));
+      startTime = performance.now();
+      let low = 0, high = mahasiswaData.length - 1;
+      while (low <= high) {
+        let mid = Math.floor((low + high) / 2);
+        let midNim = mahasiswaData[mid].nim.toLowerCase();
+        if (midNim.includes(kw) || mahasiswaData[mid].nama.toLowerCase().includes(kw)) {
+          found = mahasiswaData.filter(m => m.nama.toLowerCase().includes(kw) || m.nim.includes(kw));
+          break;
+        }
+        if (midNim < kw) low = mid + 1; else high = mid - 1;
+      }
+      endTime = performance.now();
+    }
+    let duration = (endTime - startTime).toFixed(4);
+    timeContainer.innerHTML = `<div class="execution-badge">Waktu Eksekusi: ⏱️ ${duration} ms</div>`;
+    if(found.length > 0) {
+      let h = "<ul>";
+      found.forEach(f => h += `<li>🔹 [NIM: ${f.nim}] <strong>${f.nama}</strong> — IPK: ${f.ipk}</li>`);
+      resultDiv.innerHTML = h + "</ul>";
+    } else {
+      resultDiv.innerHTML = "<span style='color:var(--danger)'>Data tidak ditemukan.</span>";
+    }
+  }
+
+  function runSort() {
+    const algo = document.getElementById('sort-algo').value;
+    const field = document.getElementById('sort-field').value;
+    let startTime = performance.now();
+    if (algo === 'bubble') {
+      let n = mahasiswaData.length;
+      for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+          let check = field === 'ipk' ? parseFloat(mahasiswaData[j].ipk) > parseFloat(mahasiswaData[j+1].ipk) : mahasiswaData[j].nama.localeCompare(mahasiswaData[j+1].nama) > 0;
+          if (check) { let temp = mahasiswaData[j]; mahasiswaData[j] = mahasiswaData[j+1]; mahasiswaData[j+1] = temp; }
+        }
+      }
+    } else {
+      mahasiswaData = mergeSort(mahasiswaData, field);
+    }
+    let duration = (performance.now() - startTime).toFixed(4);
+    showToast(`Urut selesai dalam ${duration} ms!`, 'success');
+    switchNav('dashboard');
+  }
+
+  function mergeSort(arr, field) {
+    if (arr.length <= 1) return arr;
+    const mid = Math.floor(arr.length / 2);
+    return merge(mergeSort(arr.slice(0, mid), field), mergeSort(arr.slice(mid), field), field);
+  }
+
+  function merge(left, right, field) {
+    let result = [], l = 0, r = 0;
+    while (l < left.length && r < right.length) {
+      let condition = field === 'ipk' ? parseFloat(left[l].ipk) < parseFloat(right[r].ipk) : left[l].nama.localeCompare(right[r].nama) < 0;
+      if (condition) result.push(left[l++]); else result.push(right[r++]);
+    }
+    return result.concat(left.slice(l)).concat(right.slice(r));
+  }
+
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify(mahasiswaData, null, 2)], {type: "application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "data_mahasiswa.json";
+    a.click();
+  }
+
+  function importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        importedData.forEach(item => {
+          if (item.nim && !mahasiswaData.some(m => m.nim === item.nim)) mahasiswaData.push(item);
+        });
+        showToast("Sukses mengimpor!", "success");
+        renderDashboard();
+      } catch (err) { showToast("Gagal membaca file JSON", "danger"); }
+    };
+    reader.readAsText(file);
+  }
+
+  function handleConsoleKey(e) {
+    if(e.key === 'Enter') {
+      const input = document.getElementById('console-input'), out = document.getElementById('terminal-output');
+      out.innerHTML += `<br><span style="color:var(--accent)">python&gt; ${input.value}</span>`;
+      input.value = ""; out.scrollTop = out.scrollHeight;
+    }
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.background = type === 'success' ? 'var(--success)' : type === 'danger' ? 'var(--danger)' : 'var(--accent)';
+    t.style.color = type === 'success' ? '#000' : '#fff';
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
+  }
+
+  window.onload = function() { renderDashboard(); };
+</script>
+</body>
+</html>
