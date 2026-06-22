@@ -1,0 +1,6 @@
+{
+  "name": "sispeda",
+  "scripts": {
+    "start": "npx serve . -p $PORT"
+  }
+}
